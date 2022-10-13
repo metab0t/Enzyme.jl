@@ -16,6 +16,7 @@ using ForwardDiff
 using Aqua
 using Statistics
 using LinearAlgebra
+using MPI
 
 using Enzyme_jll
 @info "Testing against" Enzyme_jll.libEnzyme
@@ -196,7 +197,7 @@ end
     test_scalar(x->rem(x, 1), 0.7)
     test_scalar(x->rem2pi(x,RoundDown), 0.7)
     test_scalar(x->fma(x,x+1,x/3), 2.3)
-    
+
     @test autodiff(Forward, sincos, Duplicated(1.0, 1.0))[1][1] ≈ cos(1.0)
 
     @test autodiff(Reverse, (x)->log(x), Active(2.0)) == ((0.5,),)
@@ -419,7 +420,7 @@ end
 
     bias = Float32[0.0;;;]
     res = Enzyme.autodiff(Reverse, f, Active, Active(x[1]), Const(bias))
-    
+
     @test bias[1][1] ≈ 0.0
     @test res[1][1] ≈ cos(x[1])
 end
@@ -2020,6 +2021,16 @@ end
     )
     @test ad_eta[1] ≈ 0.0
 end
+@testset "MPI" begin
+    testdir = @__DIR__
+    # Test parsing
+    include("mpi.jl")
+    mpiexec() do cmd
+        run(`$cmd -n 2 $(Base.julia_cmd()) --project=$testdir $testdir/mpi.jl`)
+    end
+    @test true
+end
+
 
 # Always run last since otherwise on 1.6 device functions cause breakage.
 using CUDA
