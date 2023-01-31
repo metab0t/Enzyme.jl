@@ -2025,9 +2025,7 @@ end
     testdir = @__DIR__
     # Test parsing
     include("mpi.jl")
-    mpiexec() do cmd
-        run(`$cmd -n 2 $(Base.julia_cmd()) --project=$testdir $testdir/mpi.jl`)
-    end
+    success(pipeline(`$(mpiexec()) -n 2 $(Base.julia_cmd()) --project=$testdir $testdir/mpi.jl`; stderr))
     @test true
 end
 
